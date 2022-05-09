@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import javax.ejb.EJB;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -45,6 +46,7 @@ import session.UserRolesFacade;
     "/updateAuthor",
     
 })
+@MultipartConfig
 public class ManagerServlet extends HttpServlet {
     
     @EJB private BookFacade bookFacade;
@@ -91,13 +93,14 @@ public class ManagerServlet extends HttpServlet {
                 break;
             case "/createBook":
                // String cover = request.getParameter("cover");
-                String pathToFile = "D:\\UploadDir";
+                String pathToDir = "D:\\UploadDir\\JKTV20WebLibrary";
                 Part part = request.getPart("cover");
                 String filename = getFileName(part);
-                File file = new File(pathToFile+File.separator+filename);
+                String pathToFile = pathToDir+File.separator+filename;
+                File file = new File(pathToFile);
                 file.mkdirs();
                 try(InputStream fileContent = part.getInputStream()){
-                    Files.copy(fileContent, file.getPath(), StandardCopyOption.REPLACE_EXISTING);
+                    Files.copy(fileContent, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 }
                 String caption = request.getParameter("caption");
                 String[] bookAuthors = request.getParameterValues("authors");
@@ -113,7 +116,7 @@ public class ManagerServlet extends HttpServlet {
                 book.setAuthors(listBookAuthors);
                 book.setPublishedYear(Integer.parseInt(publishedYear));
                 book.setPrice(price);
-                book.setCover(cover);
+                book.setCover(pathToFile);
                 bookFacade.create(book);
                 request.getRequestDispatcher("/addBook.jsp").forward(request, response);
                 break;
